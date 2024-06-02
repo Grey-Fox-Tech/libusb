@@ -1,4 +1,4 @@
-AC_INIT([usb], [1.0], [])
+AC_INIT([libusb], [1.0], [])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 AC_PROG_RANLIB
 AM_PROG_AR
