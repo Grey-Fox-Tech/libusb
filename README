@@ -15,6 +15,27 @@ make install
 
 int usb_clear_feature(int fd, unsigned short feature_selector, unsigned short w_index);
 
+DESCRIPTION
+
+Request used to clear or disable a specific feature.
+
+The fd argument specifies usb file descriptor
+
+The feature_selector argument specifies the feature to clear or disable
+USB_DEVICE_REMOTE_WAKEUP
+USB_ENDPOINT_HALT
+USB_DEVICE_TEST_MODE
+
+The w_index argument specifies the address recipient
+device = 0
+interface = interface number
+endpoint = endpoint number
+
+RETURN VALUE
+
+On success zero is returned, on error 1 is returned and errno is set to indicate the error.
+
+
 int usb_get_configuration(int fd, unsigned char* buff, int* wlen);
 
 int usb_get_descriptor(int fd, unsigned char type, unsigned char index, unsigned short langid, unsigned char* buff, int* wlen);

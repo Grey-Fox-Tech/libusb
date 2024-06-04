@@ -32,6 +32,7 @@ static int __usb_bulk_msg(usb_dev_t fd, struct usbdevfs_urb* uurb)
     return 0;
 }
 
+// TODO review w_index, maybe can be deducted from feature_selector
 int usb_clear_feature(usb_dev_t fd, uint16_t feature_selector, uint16_t w_index)
 {
     struct usbdevfs_ctrltransfer usbct;
