@@ -9,7 +9,7 @@
 
 #define TIMEOUT 1000
 
-static int __usb_bulk_msg(int fd, struct usbdevfs_urb* uurb)
+static int __usb_bulk_msg(usb_dev_t fd, struct usbdevfs_urb* uurb)
 {
     int res;
     do {
@@ -20,7 +20,8 @@ static int __usb_bulk_msg(int fd, struct usbdevfs_urb* uurb)
         return 1;
     }
 
-    unsigned char uurb_id[8];
+    // TODO retrieve uurb_id to caller
+    uint8_t uurb_id[8];
     do {
         res = ioctl(fd, USBDEVFS_REAPURB, uurb_id);
     } while (res == -1 && errno == EINTR);
@@ -31,7 +32,7 @@ static int __usb_bulk_msg(int fd, struct usbdevfs_urb* uurb)
     return 0;
 }
 
-int usb_clear_feature(int fd, unsigned short feature_selector, unsigned short w_index)
+int usb_clear_feature(usb_dev_t fd, uint16_t feature_selector, uint16_t w_index)
 {
     struct usbdevfs_ctrltransfer usbct;
     usbct.bRequestType = USB_DIR_OUT | USB_TYPE_STANDARD;
@@ -59,7 +60,7 @@ int usb_clear_feature(int fd, unsigned short feature_selector, unsigned short w_
     return 0;
 }
 
-int usb_get_configuration(int fd, unsigned char* buff, int* wlen)
+int usb_get_configuration(usb_dev_t fd, uint8_t* buff, int* wlen)
 {
     struct usbdevfs_ctrltransfer usbct;
     usbct.bRequestType = USB_DIR_IN;
@@ -76,12 +77,12 @@ int usb_get_configuration(int fd, unsigned char* buff, int* wlen)
     return 0;
 }
 
-int usb_get_descriptor(int fd, unsigned char type, unsigned char index, unsigned short langid, unsigned char* buff, int* wlen)
+int usb_get_descriptor(usb_dev_t fd, uint8_t type, uint8_t index, uint16_t langid, uint8_t* buff, int* wlen)
 {
     struct usbdevfs_ctrltransfer usbct;
     usbct.bRequestType = USB_DIR_IN;
     usbct.bRequest = USB_REQ_GET_DESCRIPTOR;
-    usbct.wValue = (unsigned short)((type << 8) | index);
+    usbct.wValue = (uint16_t)((type << 8) | index);
     usbct.wIndex = langid;
     usbct.timeout = TIMEOUT;
     usbct.data = buff;
@@ -124,7 +125,7 @@ int usb_get_descriptor(int fd, unsigned char type, unsigned char index, unsigned
     return 0;
 }
 
-int usb_get_interface(int fd, unsigned short interface, unsigned char* buff, int* wlen)
+int usb_get_interface(usb_dev_t fd, uint16_t interface, uint8_t* buff, int* wlen)
 {
     struct usbdevfs_ctrltransfer usbct;
     usbct.bRequestType = USB_DIR_IN | USB_TYPE_STANDARD | USB_RECIP_INTERFACE;
@@ -143,7 +144,7 @@ int usb_get_interface(int fd, unsigned short interface, unsigned char* buff, int
     return 0;
 }
 
-int usb_get_status(int fd, unsigned char recipient, unsigned char w_index, void* buff, int* wlen)
+int usb_get_status(usb_dev_t fd, uint8_t recipient, uint8_t w_index, void* buff, int* wlen)
 {
     struct usbdevfs_ctrltransfer usbct;
     usbct.bRequestType = USB_DIR_IN | USB_TYPE_STANDARD | recipient;
@@ -160,7 +161,7 @@ int usb_get_status(int fd, unsigned char recipient, unsigned char w_index, void*
     return 0;
 }
 
-int usb_set_address(int fd, unsigned short address)
+int usb_set_address(usb_dev_t fd, uint16_t address)
 {
     struct usbdevfs_ctrltransfer usbct;
     usbct.bRequestType = USB_DIR_OUT | USB_TYPE_STANDARD | USB_RECIP_DEVICE;
@@ -175,7 +176,7 @@ int usb_set_address(int fd, unsigned short address)
     return 0;
 }
 
-int usb_set_configuration(int fd, unsigned short config)
+int usb_set_configuration(usb_dev_t fd, uint16_t config)
 {
     struct usbdevfs_ctrltransfer usbct;
     usbct.bRequestType = USB_DIR_OUT;
@@ -190,12 +191,12 @@ int usb_set_configuration(int fd, unsigned short config)
     return 0;
 }
 
-int usb_set_descriptor(int fd, unsigned char type, unsigned char index, unsigned short langid, unsigned char* buff, int* wlen)
+int usb_set_descriptor(usb_dev_t fd, uint8_t type, uint8_t index, uint16_t langid, uint8_t* buff, int* wlen)
 {
     struct usbdevfs_ctrltransfer usbct;
     usbct.bRequestType = USB_DIR_OUT | USB_TYPE_STANDARD;
     usbct.bRequest = USB_REQ_SET_DESCRIPTOR;
-    usbct.wValue = (unsigned short)((type << 8) | index);
+    usbct.wValue = (uint16_t)((type << 8) | index);
     usbct.wIndex = langid;
     usbct.wLength = 126;
     usbct.timeout = TIMEOUT;
@@ -205,7 +206,7 @@ int usb_set_descriptor(int fd, unsigned char type, unsigned char index, unsigned
     return 0;
 }
 
-int usb_set_interface(int fd, unsigned short interface, unsigned short alternate_setting)
+int usb_set_interface(usb_dev_t fd, uint16_t interface, uint16_t alternate_setting)
 {
     /*
     struct usbdevfs_ctrltransfer usbct;
@@ -229,7 +230,7 @@ int usb_set_interface(int fd, unsigned short interface, unsigned short alternate
     return 0;
 }
 
-int usb_synch_frame(int fd, unsigned char endpoint, void* buff)
+int usb_synch_frame(usb_dev_t fd, uint8_t endpoint, void* buff)
 {
     struct usbdevfs_ctrltransfer usbct;
     usbct.bRequestType = USB_DIR_IN | USB_TYPE_STANDARD | USB_RECIP_ENDPOINT;
@@ -245,7 +246,7 @@ int usb_synch_frame(int fd, unsigned char endpoint, void* buff)
     return 0;
 }
 
-int usb_detach_interface(int fd, unsigned short interface)
+int usb_detach_interface(usb_dev_t fd, uint16_t interface)
 {
     struct usbdevfs_ioctl __uioctl;
     __uioctl.ifno = interface;
@@ -257,19 +258,19 @@ int usb_detach_interface(int fd, unsigned short interface)
     return 0;
 }
 
-int usb_claim_interface(int fd, unsigned short interface)
+int usb_claim_interface(usb_dev_t fd, uint16_t interface)
 {
     int __iface = interface;
     return (ioctl(fd, USBDEVFS_CLAIMINTERFACE, &__iface) == -1) ? 1 : 0;
 }
 
-int usb_release_interface(int fd, unsigned short interface)
+int usb_release_interface(usb_dev_t fd, uint16_t interface)
 {
     int __iface = interface;
     return (ioctl(fd, USBDEVFS_RELEASEINTERFACE, &__iface) == -1) ? 1 : 0;
 }
 
-int usb_get_driver(int fd, unsigned short interface, char* driver, size_t len)
+int usb_get_driver(usb_dev_t fd, uint16_t interface, char* driver, size_t len)
 {
     struct usbdevfs_getdriver __ugd;
     __ugd.interface = interface;
@@ -284,9 +285,9 @@ int usb_get_driver(int fd, unsigned short interface, char* driver, size_t len)
     return 0;
 }
 
-int usb_bulk_send(int fd, uint16_t endpoint, void* data, uint32_t len)
+int usb_bulk_send(usb_dev_t fd, uint16_t endpoint, void* data, uint32_t len)
 {
-    unsigned char* __data = (unsigned char*)data;
+    uint8_t* __data = (uint8_t*)data;
     struct usbdevfs_urb uurb = { 0 };
     uurb.type = USBDEVFS_URB_TYPE_BULK;
     uurb.endpoint = USB_DIR_OUT | endpoint;
@@ -300,7 +301,7 @@ int usb_bulk_send(int fd, uint16_t endpoint, void* data, uint32_t len)
     return uurb.actual_length;
 }
 
-int usb_bulk_recv(int fd, uint16_t endpoint, void* data, uint32_t len)
+int usb_bulk_recv(usb_dev_t fd, uint16_t endpoint, void* data, uint32_t len)
 {
     struct usbdevfs_urb uurb = { 0 };
     uurb.type = USBDEVFS_URB_TYPE_BULK;
@@ -315,9 +316,9 @@ int usb_bulk_recv(int fd, uint16_t endpoint, void* data, uint32_t len)
     return uurb.actual_length;
 }
 
-int usb_get_string(int fd, unsigned char index, unsigned short langid, char* buff)
+int usb_get_string(usb_dev_t fd, uint8_t index, uint16_t langid, char* buff)
 {
-    unsigned char __buff[USB_MAX_STRING_LEN];
+    uint8_t __buff[USB_MAX_STRING_LEN];
     char* __buffp = buff;
     int __rlen;
     if (usb_get_descriptor(fd, USB_DT_STRING, index, langid, __buff, &__rlen) != 0) {
