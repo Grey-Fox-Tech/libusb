@@ -11,22 +11,22 @@
 
 static int __usb_bulk_msg(usb_dev_t fd, struct usbdevfs_urb* uurb)
 {
-    int res;
+    int __res;
     do {
-        res = ioctl(fd, USBDEVFS_SUBMITURB, uurb);
-    } while (res == -1 && errno == EINTR);
+        __res = ioctl(fd, USBDEVFS_SUBMITURB, uurb);
+    } while (__res == -1 && errno == EINTR);
 
-    if (res < 0) {
+    if (__res < 0) {
         return 1;
     }
 
     // TODO retrieve uurb_id to caller
     uint8_t uurb_id[8];
     do {
-        res = ioctl(fd, USBDEVFS_REAPURB, uurb_id);
-    } while (res == -1 && errno == EINTR);
+        __res = ioctl(fd, USBDEVFS_REAPURB, uurb_id);
+    } while (__res == -1 && errno == EINTR);
 
-    if (res < 0)
+    if (__res < 0)
         return 1;
 
     return 0;
@@ -35,175 +35,182 @@ static int __usb_bulk_msg(usb_dev_t fd, struct usbdevfs_urb* uurb)
 // TODO review w_index, maybe can be deducted from feature_selector
 int usb_clear_feature(usb_dev_t fd, uint16_t feature_selector, uint16_t w_index)
 {
-    struct usbdevfs_ctrltransfer usbct;
-    usbct.bRequestType = USB_DIR_OUT | USB_TYPE_STANDARD;
-    usbct.bRequest = USB_REQ_CLEAR_FEATURE;
-    usbct.wValue = feature_selector;
-    usbct.wIndex = w_index;
-    usbct.wLength = 0;
-    usbct.timeout = TIMEOUT;
+    struct usbdevfs_ctrltransfer __usbct;
+    __usbct.bRequestType = USB_DIR_OUT | USB_TYPE_STANDARD;
+    __usbct.bRequest = USB_REQ_CLEAR_FEATURE;
+    __usbct.wValue = feature_selector;
+    __usbct.wIndex = w_index;
+    __usbct.wLength = 0;
+    __usbct.timeout = TIMEOUT;
 
     switch (feature_selector) {
     case USB_DEVICE_REMOTE_WAKEUP:
-        usbct.bRequestType |= USB_RECIP_DEVICE;
+        __usbct.bRequestType |= USB_RECIP_DEVICE;
         break;
     case USB_ENDPOINT_HALT:
-        usbct.bRequestType |= USB_RECIP_ENDPOINT;
+        __usbct.bRequestType |= USB_RECIP_ENDPOINT;
         break;
     case USB_DEVICE_TEST_MODE:
-        usbct.bRequestType |= USB_RECIP_DEVICE;
+        __usbct.bRequestType |= USB_RECIP_DEVICE;
         break;
     default:;
     }
 
-    if (ioctl(fd, USBDEVFS_CONTROL, &usbct) == -1)
+    if (ioctl(fd, USBDEVFS_CONTROL, &__usbct) == -1)
         return 1;
     return 0;
 }
 
 int usb_get_configuration(usb_dev_t fd, uint8_t* buff, int* wlen)
 {
-    struct usbdevfs_ctrltransfer usbct;
-    usbct.bRequestType = USB_DIR_IN;
-    usbct.bRequest = USB_REQ_GET_CONFIGURATION;
-    usbct.wValue = 0;
-    usbct.wIndex = 0;
-    usbct.wLength = 1;
-    usbct.timeout = TIMEOUT;
-    usbct.data = buff;
+    struct usbdevfs_ctrltransfer __usbct;
+    __usbct.bRequestType = USB_DIR_IN;
+    __usbct.bRequest = USB_REQ_GET_CONFIGURATION;
+    __usbct.wValue = 0;
+    __usbct.wIndex = 0;
+    __usbct.wLength = 1;
+    __usbct.timeout = TIMEOUT;
+    __usbct.data = buff;
 
-    *wlen = usbct.wLength;
-    if (ioctl(fd, USBDEVFS_CONTROL, &usbct) == -1)
+    *wlen = __usbct.wLength;
+    if (ioctl(fd, USBDEVFS_CONTROL, &__usbct) == -1)
         return 1;
     return 0;
 }
 
 int usb_get_descriptor(usb_dev_t fd, uint8_t type, uint8_t index, uint16_t langid, uint8_t* buff, int* wlen)
 {
-    struct usbdevfs_ctrltransfer usbct;
-    usbct.bRequestType = USB_DIR_IN;
-    usbct.bRequest = USB_REQ_GET_DESCRIPTOR;
-    usbct.wValue = (uint16_t)((type << 8) | index);
-    usbct.wIndex = langid;
-    usbct.timeout = TIMEOUT;
-    usbct.data = buff;
+    struct usbdevfs_ctrltransfer __usbct;
+    __usbct.bRequestType = USB_DIR_IN;
+    __usbct.bRequest = USB_REQ_GET_DESCRIPTOR;
+    __usbct.wValue = (uint16_t)((type << 8) | index);
+    __usbct.wIndex = langid;
+    __usbct.timeout = TIMEOUT;
+    __usbct.data = buff;
 
     switch (type) {
     case USB_DT_DEVICE:
-        usbct.wLength = USB_DT_DEVICE_SIZE;
+        __usbct.wLength = USB_DT_DEVICE_SIZE;
         break;
     case USB_DT_CONFIG:
-        usbct.wLength = USB_DT_CONFIG_SIZE;
+        __usbct.wLength = USB_DT_CONFIG_SIZE;
         break;
     case USB_DT_STRING:
-        usbct.wLength = USB_MAX_STRING_LEN;
+        __usbct.wLength = USB_MAX_STRING_LEN;
         break;
     case USB_DT_INTERFACE:
-        usbct.wLength = USB_DT_INTERFACE_SIZE;
+        __usbct.wLength = USB_DT_INTERFACE_SIZE;
         break;
     case USB_DT_ENDPOINT:
-        usbct.wLength = USB_DT_ENDPOINT_SIZE;
+        __usbct.wLength = USB_DT_ENDPOINT_SIZE;
         break;
     case USB_DT_DEVICE_QUALIFIER:
-        usbct.wLength = 32;
+        __usbct.wLength = 32;
         break;
     case USB_DT_OTHER_SPEED_CONFIG:
-        usbct.wLength = 32;
+        __usbct.wLength = 32;
         break;
     }
 
-    if (ioctl(fd, USBDEVFS_CONTROL, &usbct) == -1)
+    if (ioctl(fd, USBDEVFS_CONTROL, &__usbct) == -1)
         return 1;
 
     // we need to ask for the complete configuration (byte 2 and 3 holds the total config size)
     if (type == USB_DT_CONFIG) {
-        usbct.wLength = (buff[3] << 8) | buff[2];
-        if (ioctl(fd, USBDEVFS_CONTROL, &usbct) == -1)
+        __usbct.wLength = (buff[3] << 8) | buff[2];
+        if (ioctl(fd, USBDEVFS_CONTROL, &__usbct) == -1)
             return 1;
     }
+
     if (wlen)
         *wlen = buff[0];
+
     return 0;
 }
 
 int usb_get_interface(usb_dev_t fd, uint16_t interface, uint8_t* buff, int* wlen)
 {
-    struct usbdevfs_ctrltransfer usbct;
-    usbct.bRequestType = USB_DIR_IN | USB_TYPE_STANDARD | USB_RECIP_INTERFACE;
-    usbct.bRequest = USB_REQ_GET_INTERFACE;
-    usbct.wValue = 0;
-    usbct.wIndex = interface;
-    usbct.wLength = 1;
-    usbct.timeout = TIMEOUT;
-    usbct.data = buff;
+    struct usbdevfs_ctrltransfer __usbct;
+    __usbct.bRequestType = USB_DIR_IN | USB_TYPE_STANDARD | USB_RECIP_INTERFACE;
+    __usbct.bRequest = USB_REQ_GET_INTERFACE;
+    __usbct.wValue = 0;
+    __usbct.wIndex = interface;
+    __usbct.wLength = 1;
+    __usbct.timeout = TIMEOUT;
+    __usbct.data = buff;
 
-    if (ioctl(fd, USBDEVFS_CONTROL, &usbct) == -1)
+    if (ioctl(fd, USBDEVFS_CONTROL, &__usbct) == -1)
         return 1;
 
     if (wlen)
-        *wlen = usbct.wLength;
+        *wlen = __usbct.wLength;
+
     return 0;
 }
 
 int usb_get_status(usb_dev_t fd, uint8_t recipient, uint8_t w_index, void* buff, int* wlen)
 {
-    struct usbdevfs_ctrltransfer usbct;
-    usbct.bRequestType = USB_DIR_IN | USB_TYPE_STANDARD | recipient;
-    usbct.bRequest = USB_REQ_GET_STATUS;
-    usbct.wValue = 0;
-    usbct.wIndex = w_index;
-    usbct.wLength = 2;
-    usbct.timeout = TIMEOUT;
-    usbct.data = buff;
+    struct usbdevfs_ctrltransfer __usbct;
+    __usbct.bRequestType = USB_DIR_IN | USB_TYPE_STANDARD | recipient;
+    __usbct.bRequest = USB_REQ_GET_STATUS;
+    __usbct.wValue = 0;
+    __usbct.wIndex = w_index;
+    __usbct.wLength = 2;
+    __usbct.timeout = TIMEOUT;
+    __usbct.data = buff;
 
-    *wlen = usbct.wLength;
-    if (ioctl(fd, USBDEVFS_CONTROL, &usbct) == -1)
+    *wlen = __usbct.wLength;
+    if (ioctl(fd, USBDEVFS_CONTROL, &__usbct) == -1)
         return 1;
+
     return 0;
 }
 
 int usb_set_address(usb_dev_t fd, uint16_t address)
 {
-    struct usbdevfs_ctrltransfer usbct;
-    usbct.bRequestType = USB_DIR_OUT | USB_TYPE_STANDARD | USB_RECIP_DEVICE;
-    usbct.bRequest = USB_REQ_SET_ADDRESS;
-    usbct.wValue = address;
-    usbct.wIndex = 0;
-    usbct.wLength = 0;
-    usbct.timeout = TIMEOUT;
+    struct usbdevfs_ctrltransfer __usbct;
+    __usbct.bRequestType = USB_DIR_OUT | USB_TYPE_STANDARD | USB_RECIP_DEVICE;
+    __usbct.bRequest = USB_REQ_SET_ADDRESS;
+    __usbct.wValue = address;
+    __usbct.wIndex = 0;
+    __usbct.wLength = 0;
+    __usbct.timeout = TIMEOUT;
 
-    if (ioctl(fd, USBDEVFS_CONTROL, &usbct) == -1)
+    if (ioctl(fd, USBDEVFS_CONTROL, &__usbct) == -1)
         return 1;
+
     return 0;
 }
 
 int usb_set_configuration(usb_dev_t fd, uint16_t config)
 {
-    struct usbdevfs_ctrltransfer usbct;
-    usbct.bRequestType = USB_DIR_OUT;
-    usbct.bRequest = USB_REQ_SET_CONFIGURATION;
-    usbct.wValue = config;
-    usbct.wIndex = 0;
-    usbct.wLength = 0;
-    usbct.timeout = TIMEOUT;
+    struct usbdevfs_ctrltransfer __usbct;
+    __usbct.bRequestType = USB_DIR_OUT;
+    __usbct.bRequest = USB_REQ_SET_CONFIGURATION;
+    __usbct.wValue = config;
+    __usbct.wIndex = 0;
+    __usbct.wLength = 0;
+    __usbct.timeout = TIMEOUT;
 
-    if (ioctl(fd, USBDEVFS_CONTROL, &usbct) == -1)
+    if (ioctl(fd, USBDEVFS_CONTROL, &__usbct) == -1)
         return 1;
+
     return 0;
 }
 
 int usb_set_descriptor(usb_dev_t fd, uint8_t type, uint8_t index, uint16_t langid, uint8_t* buff, int* wlen)
 {
-    struct usbdevfs_ctrltransfer usbct;
-    usbct.bRequestType = USB_DIR_OUT | USB_TYPE_STANDARD;
-    usbct.bRequest = USB_REQ_SET_DESCRIPTOR;
-    usbct.wValue = (uint16_t)((type << 8) | index);
-    usbct.wIndex = langid;
-    usbct.wLength = 126;
-    usbct.timeout = TIMEOUT;
+    struct usbdevfs_ctrltransfer __usbct;
+    __usbct.bRequestType = USB_DIR_OUT | USB_TYPE_STANDARD;
+    __usbct.bRequest = USB_REQ_SET_DESCRIPTOR;
+    __usbct.wValue = (uint16_t)((type << 8) | index);
+    __usbct.wIndex = langid;
+    __usbct.wLength = 126;
+    __usbct.timeout = TIMEOUT;
 
-    if (ioctl(fd, USBDEVFS_CONTROL, &usbct) == -1)
+    if (ioctl(fd, USBDEVFS_CONTROL, &__usbct) == -1)
         return 1;
+
     return 0;
 }
 
@@ -233,17 +240,18 @@ int usb_set_interface(usb_dev_t fd, uint16_t interface, uint16_t alternate_setti
 
 int usb_synch_frame(usb_dev_t fd, uint8_t endpoint, void* buff)
 {
-    struct usbdevfs_ctrltransfer usbct;
-    usbct.bRequestType = USB_DIR_IN | USB_TYPE_STANDARD | USB_RECIP_ENDPOINT;
-    usbct.bRequest = USB_REQ_SYNCH_FRAME;
-    usbct.wValue = 0;
-    usbct.wIndex = endpoint;
-    usbct.wLength = 2;
-    usbct.timeout = TIMEOUT;
-    usbct.data = buff;
+    struct usbdevfs_ctrltransfer __usbct;
+    __usbct.bRequestType = USB_DIR_IN | USB_TYPE_STANDARD | USB_RECIP_ENDPOINT;
+    __usbct.bRequest = USB_REQ_SYNCH_FRAME;
+    __usbct.wValue = 0;
+    __usbct.wIndex = endpoint;
+    __usbct.wLength = 2;
+    __usbct.timeout = TIMEOUT;
+    __usbct.data = buff;
 
-    if (ioctl(fd, USBDEVFS_CONTROL, &usbct) == -1)
+    if (ioctl(fd, USBDEVFS_CONTROL, &__usbct) == -1)
         return 1;
+
     return 0;
 }
 
@@ -256,6 +264,7 @@ int usb_detach_interface(usb_dev_t fd, uint16_t interface)
 
     if (ioctl(fd, USBDEVFS_IOCTL, &__uioctl) == -1)
         return 1;
+
     return 0;
 }
 
@@ -289,45 +298,45 @@ int usb_get_driver(usb_dev_t fd, uint16_t interface, char* driver, size_t len)
 int usb_bulk_send(usb_dev_t fd, uint16_t endpoint, void* data, uint32_t len)
 {
     uint8_t* __data = (uint8_t*)data;
-    struct usbdevfs_urb uurb = { 0 };
-    uurb.type = USBDEVFS_URB_TYPE_BULK;
-    uurb.endpoint = USB_DIR_OUT | endpoint;
-    uurb.status = -1;
-    uurb.buffer = __data;
-    uurb.buffer_length = len;
+    struct usbdevfs_urb __uurb = { 0 };
+    __uurb.type = USBDEVFS_URB_TYPE_BULK;
+    __uurb.endpoint = USB_DIR_OUT | endpoint;
+    __uurb.status = -1;
+    __uurb.buffer = __data;
+    __uurb.buffer_length = len;
 
-    if (__usb_bulk_msg(fd, &uurb))
+    if (__usb_bulk_msg(fd, &__uurb))
         return -1;
 
-    return uurb.actual_length;
+    return __uurb.actual_length;
 }
 
 int usb_bulk_recv(usb_dev_t fd, uint16_t endpoint, void* data, uint32_t len)
 {
-    struct usbdevfs_urb uurb = { 0 };
-    uurb.type = USBDEVFS_URB_TYPE_BULK;
-    uurb.endpoint = USB_DIR_IN | endpoint;
-    uurb.status = -1;
-    uurb.buffer = data;
-    uurb.buffer_length = len;
+    struct usbdevfs_urb __uurb = { 0 };
+    __uurb.type = USBDEVFS_URB_TYPE_BULK;
+    __uurb.endpoint = USB_DIR_IN | endpoint;
+    __uurb.status = -1;
+    __uurb.buffer = data;
+    __uurb.buffer_length = len;
 
-    if (__usb_bulk_msg(fd, &uurb))
+    if (__usb_bulk_msg(fd, &__uurb))
         return -1;
 
-    return uurb.actual_length;
+    return __uurb.actual_length;
 }
 
 int usb_get_string(usb_dev_t fd, uint8_t index, uint16_t langid, char* buff)
 {
     uint8_t __buff[USB_MAX_STRING_LEN];
     char* __buffp = buff;
-    int __rlen;
+    int __rlen, i;
+
     if (usb_get_descriptor(fd, USB_DT_STRING, index, langid, __buff, &__rlen) != 0) {
         *__buffp = '\0';
         return 1;
     }
 
-    int i;
     // i = 2 skips length and descriptor type
     for (i = 2; i < __rlen; ++i)
         if (__buff[i])
