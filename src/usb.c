@@ -1,4 +1,4 @@
-#include "../usb.h"
+#include "usb.h"
 #include <asm/byteorder.h>
 #include <errno.h>
 #include <linux/usbdevice_fs.h>
