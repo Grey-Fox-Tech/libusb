@@ -1,4 +1,4 @@
-AC_INIT([libusb], [1.0], [])
+AC_INIT([libusb], [1.0.0], [])
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 AM_PROG_AR
