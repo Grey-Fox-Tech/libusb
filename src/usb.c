@@ -2,6 +2,7 @@
 #include <asm/byteorder.h>
 #include <errno.h>
 #include <linux/usbdevice_fs.h>
+#include <signal.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
@@ -23,7 +24,7 @@ static int __usb_msg(usb_dev_t fd, unsigned long request, void* _)
     return 0;
 }
 
-static int __usb_bulk_msg(usb_dev_t fd, struct usbdevfs_urb* uurb)
+static int __usb_sync_msg(usb_dev_t fd, struct usbdevfs_urb* uurb)
 {
     int __res;
     __res = __usb_msg(fd, USBDEVFS_SUBMITURB, uurb);
@@ -31,6 +32,18 @@ static int __usb_bulk_msg(usb_dev_t fd, struct usbdevfs_urb* uurb)
     // TODO retrieve uurb_id to caller
     uint8_t uurb_id[8];
     __res = __usb_msg(fd, USBDEVFS_REAPURB, uurb_id);
+
+    return 0;
+}
+
+static int __usb_async_msg(usb_dev_t fd, struct usbdevfs_urb* uurb)
+{
+    int __res;
+    __res = __usb_msg(fd, USBDEVFS_SUBMITURB, uurb);
+
+    // TODO retrieve uurb_id to caller
+    uint8_t uurb_id[8];
+    __res = __usb_msg(fd, USBDEVFS_REAPURBNDELAY, uurb_id);
 
     return 0;
 }
@@ -308,7 +321,7 @@ int usb_bulk_send(usb_dev_t fd, uint16_t endpoint, void* data, uint32_t len)
     __uurb.buffer = __data;
     __uurb.buffer_length = len;
 
-    if (__usb_bulk_msg(fd, &__uurb))
+    if (__usb_sync_msg(fd, &__uurb))
         return -1;
 
     return __uurb.actual_length;
@@ -323,7 +336,7 @@ int usb_bulk_recv(usb_dev_t fd, uint16_t endpoint, void* data, uint32_t len)
     __uurb.buffer = data;
     __uurb.buffer_length = len;
 
-    if (__usb_bulk_msg(fd, &__uurb))
+    if (__usb_sync_msg(fd, &__uurb))
         return -1;
 
     return __uurb.actual_length;
@@ -338,8 +351,9 @@ int usb_async_send(usb_dev_t fd, uint16_t endpoint, void* data, uint32_t len)
     __uurb.status = -1;
     __uurb.buffer = __data;
     __uurb.buffer_length = len;
+    __uurb.usercontext = NULL;
 
-    if (__usb_bulk_msg(fd, &__uurb))
+    if (__usb_sync_msg(fd, &__uurb))
         return -1;
 
     return __uurb.actual_length;
@@ -353,8 +367,9 @@ int usb_async_recv(usb_dev_t fd, uint16_t endpoint, void* data, uint32_t len)
     __uurb.status = -1;
     __uurb.buffer = data;
     __uurb.buffer_length = len;
+    __uurb.signr = SIGUSR1;
 
-    if (__usb_bulk_msg(fd, &__uurb))
+    if (__usb_async_msg(fd, &__uurb))
         return -1;
 
     return __uurb.actual_length;
