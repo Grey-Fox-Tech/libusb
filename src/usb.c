@@ -9,25 +9,28 @@
 
 #define TIMEOUT 1000
 
-static int __usb_bulk_msg(usb_dev_t fd, struct usbdevfs_urb* uurb)
+static int __usb_msg(usb_dev_t fd, unsigned long request, void* _)
 {
     int __res;
     do {
-        __res = ioctl(fd, USBDEVFS_SUBMITURB, uurb);
+        __res = ioctl(fd, request, _);
     } while (__res == -1 && errno == EINTR);
 
     if (__res < 0) {
         return 1;
     }
 
+    return 0;
+}
+
+static int __usb_bulk_msg(usb_dev_t fd, struct usbdevfs_urb* uurb)
+{
+    int __res;
+    __res = __usb_msg(fd, USBDEVFS_SUBMITURB, uurb);
+
     // TODO retrieve uurb_id to caller
     uint8_t uurb_id[8];
-    do {
-        __res = ioctl(fd, USBDEVFS_REAPURB, uurb_id);
-    } while (__res == -1 && errno == EINTR);
-
-    if (__res < 0)
-        return 1;
+    __res = __usb_msg(fd, USBDEVFS_REAPURB, uurb_id);
 
     return 0;
 }
@@ -315,6 +318,37 @@ int usb_bulk_recv(usb_dev_t fd, uint16_t endpoint, void* data, uint32_t len)
 {
     struct usbdevfs_urb __uurb = { 0 };
     __uurb.type = USBDEVFS_URB_TYPE_BULK;
+    __uurb.endpoint = USB_DIR_IN | endpoint;
+    __uurb.status = -1;
+    __uurb.buffer = data;
+    __uurb.buffer_length = len;
+
+    if (__usb_bulk_msg(fd, &__uurb))
+        return -1;
+
+    return __uurb.actual_length;
+}
+
+int usb_async_send(usb_dev_t fd, uint16_t endpoint, void* data, uint32_t len)
+{
+    uint8_t* __data = (uint8_t*)data;
+    struct usbdevfs_urb __uurb = { 0 };
+    __uurb.type = USBDEVFS_URB_TYPE_ISO;
+    __uurb.endpoint = USB_DIR_OUT | endpoint;
+    __uurb.status = -1;
+    __uurb.buffer = __data;
+    __uurb.buffer_length = len;
+
+    if (__usb_bulk_msg(fd, &__uurb))
+        return -1;
+
+    return __uurb.actual_length;
+}
+
+int usb_async_recv(usb_dev_t fd, uint16_t endpoint, void* data, uint32_t len)
+{
+    struct usbdevfs_urb __uurb = { 0 };
+    __uurb.type = USBDEVFS_URB_TYPE_ISO;
     __uurb.endpoint = USB_DIR_IN | endpoint;
     __uurb.status = -1;
     __uurb.buffer = data;
