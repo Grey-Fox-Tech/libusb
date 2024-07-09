@@ -375,6 +375,21 @@ int usb_async_recv(usb_dev_t fd, uint16_t endpoint, void* data, uint32_t len)
     return __uurb.actual_length;
 }
 
+int usb_int_send(usb_dev_t fd, uint16_t endpoint, void* data, uint32_t len)
+{
+    struct usbdevfs_urb __uurb = { 0 };
+    __uurb.type = USBDEVFS_URB_TYPE_INTERRUPT;
+    __uurb.endpoint = USB_DIR_OUT | endpoint;
+    __uurb.status = -1;
+    __uurb.buffer = data;
+    __uurb.buffer_length = len;
+
+    if (__usb_sync_msg(fd, &__uurb))
+        return -1;
+
+    return __uurb.actual_length;
+}
+
 int usb_int_recv(usb_dev_t fd, uint16_t endpoint, void* data, uint32_t len)
 {
     struct usbdevfs_urb __uurb = { 0 };
@@ -383,7 +398,6 @@ int usb_int_recv(usb_dev_t fd, uint16_t endpoint, void* data, uint32_t len)
     __uurb.status = -1;
     __uurb.buffer = data;
     __uurb.buffer_length = len;
-    __uurb.signr = SIGUSR2;
 
     if (__usb_async_msg(fd, &__uurb))
         return -1;

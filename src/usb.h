@@ -48,4 +48,12 @@ int usb_bulk_send(usb_dev_t fd, uint16_t endpoint, void* data, uint32_t len);
 /* Receive bulk data from endpoint */
 int usb_bulk_recv(usb_dev_t fd, uint16_t endpoint, void* data, uint32_t len);
 
+int usb_async_send(usb_dev_t fd, uint16_t endpoint, void* data, uint32_t len);
+
+int usb_async_recv(usb_dev_t fd, uint16_t endpoint, void* data, uint32_t len);
+
+int usb_int_send(usb_dev_t fd, uint16_t endpoint, void* data, uint32_t len);
+
+int usb_int_recv(usb_dev_t fd, uint16_t endpoint, void* data, uint32_t len);
+
 #endif // __USB_INCLUDED_H__

@@ -8218,7 +8218,7 @@ AC_SUBST([DLLTOOL])
 # ----------------
 # Check for a file(cmd) program that can be used to detect file type and magic
 m4_defun([_LT_DECL_FILECMD],
-[AC_CHECK_PROG([FILECMD], [file], [:])
+[AC_CHECK_PROG([FILECMD], [file], [file], [:])
 _LT_DECL([], [FILECMD], [1], [A file(cmd) program that detects file types])
 ])# _LD_DECL_FILECMD
 
@@ -8903,15 +8903,15 @@ m4_define([lt_dict_filter],
 
 # @configure_input@
 
-# serial 4337 ltversion.m4
+# serial 4350 ltversion.m4
 # This file is part of GNU Libtool
 
-m4_define([LT_PACKAGE_VERSION], [2.5.0.1-38c1-dirty])
-m4_define([LT_PACKAGE_REVISION], [2.5.0.1])
+m4_define([LT_PACKAGE_VERSION], [2.5.0.14-9a4a-dirty])
+m4_define([LT_PACKAGE_REVISION], [2.5.0.14])
 
 AC_DEFUN([LTVERSION_VERSION],
-[macro_version='2.5.0.1-38c1-dirty'
-macro_revision='2.5.0.1'
+[macro_version='2.5.0.14-9a4a-dirty'
+macro_revision='2.5.0.14'
 _LT_DECL(, macro_version, 0, [Which release of libtool.m4 was used?])
 _LT_DECL(, macro_revision, 0)
 ])
