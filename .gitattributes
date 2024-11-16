@@ -1,0 +1,11 @@
+build-aux/** linguist-detectable=false
+src/Makefile linguist-detectable=false
+src/Makefile.in linguist-detectable=false
+test/Makefile linguist-detectable=false
+test/Makefile.in linguist-detectable=false
+aclocal.m4 linguist-detectable=false
+configure linguist-detectable=false
+config.status linguist-detectable=false
+libtool linguist-detectable=false
+Makefile  linguist-detectable=false
+Makefile.in linguist-detectable=false
